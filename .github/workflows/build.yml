@@ -33,12 +33,15 @@ jobs:
           nix bundle \
             --impure \
             --bundler github:nix-community/nix-bundle \
-            --out-link portable-nvf-x86_64 \
+            --out-link result-bundle \
             .#default
 
+          # --out-link makes a symlink to the store path; materialize a real
+          # file so tar/release upload ship the binary, not a dangling link.
+          cp -L result-bundle portable-nvf-x86_64
           chmod +x portable-nvf-x86_64
           ls -lh portable-nvf-x86_64
-          file portable-nvf-x86_64
+          file portable-nvf-x86_64 || true
 
       - name: Create release tarball
         run: |

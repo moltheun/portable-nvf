@@ -90,10 +90,14 @@
       # nix-user-chroot sets up /nix/store from the bundled archive at runtime,
       # then execs nvim. No root, no system install.
       launcherPkgs = nixpkgs.legacyPackages.${targetSystem};
-      launcher = launcherPkgs.writeScriptBin "portable-nvf" ''
+      # nix-bundle's default bundler names its arx output "${drv.pname}-arx",
+      # and writeScriptBin only sets .name — so add a .pname explicitly.
+      launcher = (launcherPkgs.writeScriptBin "portable-nvf" ''
         #!${launcherPkgs.runtimeShell}
         exec ${nvfNeovim}/bin/nvim "$@"
-      '';
+      '').overrideAttrs (_old: {
+        pname = "portable-nvf";
+      });
 
     in
     {
