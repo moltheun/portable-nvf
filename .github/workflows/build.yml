@@ -1,0 +1,62 @@
+name: Build Portable nvf Bundle
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+
+      - name: Build nvf
+        run: |
+          nix build .#default --out-link result
+          echo "Built: $(readlink -f result)"
+          ls -la result/bin/
+
+      - name: Bundle with nix-bundle
+        run: |
+          # nix-bundle creates a self-extracting arx executable containing
+          # the full Nix closure + nix-user-chroot. Target needs zero Nix.
+          # The bender function takes a derivation and returns a single file.
+          nix bundle \
+            --impure \
+            --bundler github:nix-community/nix-bundle \
+            --out-link portable-nvf-x86_64 \
+            .#default
+
+          chmod +x portable-nvf-x86_64
+          ls -lh portable-nvf-x86_64
+          file portable-nvf-x86_64
+
+      - name: Create release tarball
+        run: |
+          tar czf portable-nvf-x86_64.tar.gz portable-nvf-x86_64
+          ls -lh portable-nvf-x86_64.tar.gz
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: portable-nvf-x86_64
+          path: portable-nvf-x86_64
+          retention-days: 90
+
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            portable-nvf-x86_64
+            portable-nvf-x86_64.tar.gz
+          generate_release_notes: true

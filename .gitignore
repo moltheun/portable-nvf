@@ -1,0 +1,8 @@
+# Build artifacts
+result
+result-*
+portable-nvf-x86_64
+portable-nvf-x86_64.tar.gz
+
+# Nix
+.direnv/
