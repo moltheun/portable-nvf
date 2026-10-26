@@ -12,7 +12,10 @@
   outputs = { self, nixpkgs, nvf, ... }:
     let
       targetSystem = "x86_64-linux";
-      pkgs = nixpkgs.legacyPackages.${targetSystem};
+      pkgs = import nixpkgs {
+        system = targetSystem;
+        config.allowUnfree = true;
+      };
       line-width = 89;
 
       nvfModule = { config, ... }: {

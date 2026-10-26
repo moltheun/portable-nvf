@@ -20,8 +20,10 @@ jobs:
         uses: DeterminateSystems/nix-installer-action@main
 
       - name: Build nvf
+        env:
+          NIXPKGS_ALLOW_UNFREE: "1"
         run: |
-          nix build .#default --out-link result
+          nix build .#default --impure --out-link result
           echo "Built: $(readlink -f result)"
           ls -la result/bin/
 
